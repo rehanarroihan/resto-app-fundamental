@@ -1,11 +1,11 @@
-import 'dart:convert';
-
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:restaurant/models/restaurant.dart';
+import 'package:lottie/lottie.dart';
+import 'package:restaurant/bloc/restaurant_cubit.dart';
 import 'package:restaurant/screen/details_screen.dart';
+import 'package:restaurant/widgets/negative_view_state.dart';
+import 'package:restaurant/widgets/item_restaurant.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -15,121 +15,74 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final List<Restaurant> _restoList = [];
+  late RestaurantCubit _restaurantCubit;
 
   @override
   void initState() {
-    _getList();
     super.initState();
+
+    _restaurantCubit = BlocProvider.of<RestaurantCubit>(context);
+
+    _restaurantCubit.getRestoList();
   }
 
-  void _getList() async {
-    try {
-      String? data = await DefaultAssetBundle.of(context).loadString("assets/restaurants.json");
-      var restoRawList = jsonDecode(data)['restaurants'];
-      restoRawList.forEach((v) {
-        _restoList.add(Restaurant.fromJson(v));
-      });
-
-      setState(() {});
-    } catch (e) {
-      print(e);
-    }
-  }
+  final TextEditingController _inputSearch = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFf9f9fb),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 32),
-
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  'TheResto',
-                  style: GoogleFonts.pacifico(fontSize: 24, fontWeight: FontWeight.w700),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _searchBox()
-              ),
-
-              const SizedBox(height: 32),
-
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: const Text(
-                  'Top Rated Restaurant',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700
-                  ),
-                ),
-              ),
-              SizedBox(
-                height: 330,
-                child: ListView.builder(
-                  physics: const BouncingScrollPhysics(),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _restoList.length,
-                  shrinkWrap: true,
-                  padding: const EdgeInsets.only(left: 16, top: 16, bottom: 44),
-                  itemBuilder: (BuildContext context, int index) {
-                    return Container(
-                      width: MediaQuery.of(context).size.width * 0.62,
-                      margin: const EdgeInsets.only(right: 16),
-                      child: _restaurantItem(
-                        id: _restoList[index].id!,
-                        imageUrl: _restoList[index].pictureId!,
-                        name: _restoList[index].name!,
-                        type: _restoList[index].city!,
-                        rating: _restoList[index].rating!
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: const Text(
-                  'Temukan yang lain!',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700
-                  ),
-                ),
-              ),
-
-              Container(
-                padding: const EdgeInsets.all(16),
+    return BlocListener(
+      bloc: _restaurantCubit,
+      listener: (context, state) {},
+      child: BlocBuilder(
+        bloc: _restaurantCubit,
+        builder: (context, state) {
+          return Scaffold(
+            backgroundColor: const Color(0xFFf9f9fb),
+            body: SafeArea(
+              child: SingleChildScrollView(
                 child: Column(
-                  children: _restoList.reversed.map<Widget>((Restaurant resto) {
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      child: _restaurantItem(
-                        id: resto.id!,
-                        imageUrl: resto.pictureId!,
-                        name: resto.name!,
-                        type: resto.city!,
-                        rating: resto.rating!
-                      ),
-                    );
-                  }).toList()
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 32),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'TheResto',
+                            style: GoogleFonts.pacifico(fontSize: 24, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () {
+                            if (!_restaurantCubit.isGetRestoListLoading) {
+                              _restaurantCubit.getRestoList();
+                            }
+                          },
+                          icon: const Icon(Icons.refresh),
+                        )
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _searchBox()
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    _buildList(),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
+          );
+        },
+      )
     );
   }
 
@@ -146,6 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       child: TextFormField(
+        controller: _inputSearch,
         decoration: const InputDecoration(
           filled: true,
           hintText: "Cari restoran favorit mu",
@@ -164,101 +118,76 @@ class _HomeScreenState extends State<HomeScreen> {
             borderSide: BorderSide(color: Colors.transparent),
           ),
         ),
+        textInputAction: TextInputAction.search,
+        onEditingComplete: () {
+          _restaurantCubit.getRestoList(query: _inputSearch.text);
+        },
       ),
     );
   }
 
-  Widget _restaurantItem({
-    required String id,
-    required String imageUrl,
-    required String name,
-    required String type,
-    required double rating,
-  }) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(context, MaterialPageRoute(
-          builder: (context) => DetailsScreen(id: id)
-        ));
-      },
-      child: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-          boxShadow: [
-            BoxShadow(
-              color: Color(0x0Df9701f),
-              offset: Offset(0, 10),
-              blurRadius: 20,
-            ),
-          ],
+  Widget _buildList() {
+    if (_restaurantCubit.isGetRestoListLoading) {
+      return Center(
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * 0.7,
+          width: 104,
+          child: Lottie.asset('assets/loading.json')
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CachedNetworkImage(
-              imageUrl: imageUrl,
-              height: 160,
-              imageBuilder: (context, imageProvider) => Container(
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12), topRight: Radius.circular(12)
-                  ),
-                  image: DecorationImage(
-                    image: imageProvider,
-                    fit: BoxFit.cover,
-                  ),
+      );
+    } else {
+      if (_restaurantCubit.isGetRestoListErrorNoInternet) {
+        return const Center(
+          child: NegativeViewState(
+            assets: 'assets/image_no_internet.png',
+            title: 'No Internet',
+            description: 'Tidak ada koneksi internet,\nPastikan anda terhubung ke internet',
+          ),
+        );
+      } else {
+        if (_restaurantCubit.restaurants.isEmpty) {
+          return Center(
+            child: NegativeViewState(
+              assets: 'assets/image_no_internet.png',
+              title: 'Hasil tidak ditemukan',
+              description: 'Tidak ditemukan hasil pencarian\ndari kata kunci ${_inputSearch.text}'
+            ),
+          );
+        } else {
+          return ListView.builder(
+            itemCount: _restaurantCubit.restaurants.length,
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            itemBuilder: (BuildContext context, int index) {
+              String imageId = _restaurantCubit.restaurants[index].pictureId!;
+              String imageUrl = "https://restaurant-api.dicoding.dev/images/medium/$imageId";
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                child: ItemRestaurant(
+                  id: _restaurantCubit.restaurants[index].id!,
+                  imageUrl: imageUrl,
+                  name: _restaurantCubit.restaurants[index].name!,
+                  type: _restaurantCubit.restaurants[index].city!,
+                  rating: _restaurantCubit.restaurants[index].rating!,
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (context) => DetailsScreen(
+                        id: _restaurantCubit.restaurants[index].id!,
+                        imageId: imageId,
+                        restoName: _restaurantCubit.restaurants[index].name!,
+                        city: _restaurantCubit.restaurants[index].city!,
+                        rating: _restaurantCubit.restaurants[index].rating!,
+                      )
+                    ));
+                  },
                 ),
-              ),
-            ),
-
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700
-                    ),
-                  ),
-                  Text(
-                    type,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  Row(
-                    children: [
-                      RatingBar.builder(
-                        itemSize: 20,
-                        ignoreGestures: true,
-                        initialRating: rating,
-                        direction: Axis.horizontal,
-                        itemBuilder: (context, _) => const Icon(
-                          Icons.star,
-                          color: Colors.amber,
-                        ),
-                        onRatingUpdate: (double value) {  },
-                      ),
-                      const SizedBox(width: 4),
-                      Text('($rating)'),
-                    ],
-                  )
-                ],
-              ),
-            )
-          ],
-        ),
-      ),
-    );
+              );
+            },
+          );
+        }
+      }
+    }
   }
 }

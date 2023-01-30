@@ -1,16 +1,27 @@
-import 'dart:convert';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:restaurant/models/restaurant.dart';
+import 'package:restaurant/bloc/restaurant_cubit.dart';
+import 'package:restaurant/widgets/item_customer_review.dart';
+import 'package:restaurant/widgets/item_resto_menu.dart';
+import 'package:restaurant/widgets/negative_view_state.dart';
+import 'package:restaurant/widgets/skeleton.dart';
 
 class DetailsScreen extends StatefulWidget {
   final String id;
+  final String imageId;
+  final String restoName;
+  final String city;
+  final double rating;
 
   const DetailsScreen({
     Key? key,
-    required this.id
+    required this.id,
+    required this.imageId,
+    required this.restoName,
+    required this.city,
+    required this.rating,
   }) : super(key: key);
 
   @override
@@ -18,182 +29,285 @@ class DetailsScreen extends StatefulWidget {
 }
 
 class _DetailsScreenState extends State<DetailsScreen> {
-  bool _isLoading = false;
-  Restaurant? _data;
+  late RestaurantCubit _restaurantCubit;
 
+  @override
   void initState() {
-    _getDetail();
-
     super.initState();
-  }
 
-  void _getDetail() async {
-    setState(() {
-      _isLoading = true;
-    });
+    _restaurantCubit = BlocProvider.of<RestaurantCubit>(context);
 
-    try {
-      String? data = await DefaultAssetBundle.of(context).loadString("assets/restaurants.json");
-      var restoRawList = jsonDecode(data)['restaurants'];
-      var list = [];
-      restoRawList.forEach((v) {
-        list.add(Restaurant.fromJson(v));
-      });
-      _data = list.where((element) => element.id == widget.id).first;
-      _isLoading = false;
-
-      setState(() {});
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-
-      print(e);
-    }
+    _restaurantCubit.getRestoDetail(widget.id);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: _isLoading ? const Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
-          ),
-        ) : SingleChildScrollView(
-          child: Column(
+    return BlocBuilder(
+      bloc: _restaurantCubit,
+      builder: (context, state) {
+        return Scaffold(
+          body: _restaurantCubit.isGetRestoDetailErrorNoInternet ? Column(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CachedNetworkImage(
-                imageUrl: _data?.pictureId ?? '',
-                height: 320,
-                imageBuilder: (context, imageProvider) => Container(
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: imageProvider,
-                      fit: BoxFit.cover,
+              Center(
+                child: NegativeViewState(
+                  assets: 'assets/image_no_internet.png',
+                  title: 'No Internet',
+                  description: 'Tidak ada koneksi internet,\nPastikan anda terhubung ke internet',
+                  actionButtonText: 'Coba Lagi',
+                  onActionButtonTap: () => _restaurantCubit.getRestoDetail(widget.id),
+                ),
+              ),
+            ],
+          ) : SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _headerSection(),
+
+                _restaurantCubit.isGetRestoDetailLoading
+                    ? Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: _loadingViewState()
+                      )
+                    : _bodySection()
+              ],
+            ),
+          ),
+        );
+      }
+    );
+  }
+
+  Widget _headerSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CachedNetworkImage(
+          imageUrl: "https://restaurant-api.dicoding.dev/images/large/${widget.imageId}",
+          height: 320,
+          placeholder: (context, url) => const Skeleton(
+            height: 320,
+            width: double.infinity,
+          ),
+          imageBuilder: (context, imageProvider) => Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: imageProvider,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+        ),
+
+        Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.restoName,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700
+                ),
+              ),
+              Text(
+                widget.city,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Row(
+                children: [
+                  RatingBar.builder(
+                    itemSize: 20,
+                    ignoreGestures: true,
+                    initialRating: widget.rating,
+                    direction: Axis.horizontal,
+                    itemBuilder: (context, _) => const Icon(
+                      Icons.star,
+                      color: Colors.amber,
                     ),
+                    onRatingUpdate: (double value) {  },
                   ),
-                ),
-              ),
-
-              Container(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _data?.name! ?? "",
-                      style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700
-                      ),
-                    ),
-                    Text(
-                      _data?.city! ?? "",
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w500
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    Row(
-                      children: [
-                        RatingBar.builder(
-                          itemSize: 20,
-                          ignoreGestures: true,
-                          initialRating: _data?.rating ?? 0.0,
-                          direction: Axis.horizontal,
-                          itemBuilder: (context, _) => const Icon(
-                            Icons.star,
-                            color: Colors.amber,
-                          ),
-                          onRatingUpdate: (double value) {  },
-                        ),
-                        const SizedBox(width: 4),
-                        Text('(${_data?.rating!})'),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    Text(
-                      _data?.description! ?? "",
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w500
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const Center(
-                child: Text(
-                  'Menu',
-                  style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700
-                  ),
-                ),
-              ),
-
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Makanan',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700
-                      ),
-                    ),
-                    ListView.builder(
-                      physics: const BouncingScrollPhysics(),
-                      scrollDirection: Axis.vertical,
-                      itemCount: _data?.menus!.foods!.length,
-                      shrinkWrap: true,
-                      itemBuilder: (BuildContext context, int index) {
-                        return Container(
-                          margin: const EdgeInsets.only(right: 16),
-                          child: Text(_data?.menus!.foods![index].name ?? ""),
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    const Text(
-                      'Minuman',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700
-                      ),
-                    ),
-                    ListView.builder(
-                      physics: const BouncingScrollPhysics(),
-                      scrollDirection: Axis.vertical,
-                      itemCount: _data?.menus!.drinks!.length,
-                      shrinkWrap: true,
-                      itemBuilder: (BuildContext context, int index) {
-                        return Container(
-                          margin: const EdgeInsets.only(right: 16),
-                          child: Text(_data?.menus!.drinks![index].name ?? ""),
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 24),
-                  ],
-                ),
+                  const SizedBox(width: 4),
+                  Text('(${widget.rating})'),
+                ],
               ),
             ],
           ),
         ),
-      ),
+      ],
+    );
+  }
+
+  Widget _bodySection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            _restaurantCubit.restoDetail?.description ?? "",
+            style: const TextStyle(
+              fontWeight: FontWeight.w500
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        const Center(
+          child: Text(
+            'Menu',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w700
+            ),
+          ),
+        ),
+
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          child: const Text(
+            'Makanan',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700
+            ),
+          ),
+        ),
+
+        SizedBox(
+          height: 220,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+            itemCount: _restaurantCubit.restoDetail?.menus?.foods?.length ?? 0,
+            shrinkWrap: true,
+            itemBuilder: (BuildContext context, int index) {
+              return AspectRatio(
+                aspectRatio: 9/11,
+                child: Container(
+                  margin: const EdgeInsets.only(right: 12),
+                  child: ItemRestoMenu(
+                    imageUrl: 'https://luigispizzakenosha.com/wp-content/uploads/placeholder.png',
+                    itemName: _restaurantCubit.restoDetail?.menus?.foods![index].name ?? "",
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+
+        const SizedBox(height: 4),
+
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          child: const Text(
+            'Minuman',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 220,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+            itemCount: _restaurantCubit.restoDetail?.menus?.drinks?.length ?? 0,
+            shrinkWrap: true,
+            itemBuilder: (BuildContext context, int index) {
+              return AspectRatio(
+                aspectRatio: 9/11,
+                child: Container(
+                  margin: const EdgeInsets.only(right: 12),
+                  child: ItemRestoMenu(
+                    imageUrl: 'https://www.mixlabcocktails.com/images/cocktail-image/image-placeholder@3x.png',
+                    itemName: _restaurantCubit.restoDetail?.menus?.drinks![index].name ?? "",
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        Center(
+          child: Text(
+            'Review (${_restaurantCubit.restoDetail?.customerReviews?.length})',
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w700
+            ),
+          ),
+        ),
+        ListView.builder(
+          itemCount: _restaurantCubit.restoDetail?.customerReviews?.length ?? 0,
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          itemBuilder: (context, index) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ItemCustomerReview(
+                name: _restaurantCubit.restoDetail?.customerReviews?[index].name ?? "",
+                date: _restaurantCubit.restoDetail?.customerReviews?[index].date ?? "",
+                review: _restaurantCubit.restoDetail?.customerReviews?[index].review ?? ""
+              ),
+            );
+          },
+        ),
+
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  Widget _loadingViewState() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Skeleton(
+          height: 16,
+          width: double.infinity,
+          radius: 4,
+        ),
+        const SizedBox(height: 8),
+        const Skeleton(
+          height: 16,
+          width: double.infinity,
+          radius: 4,
+        ),
+        const SizedBox(height: 8),
+        const Skeleton(
+          height: 16,
+          width: double.infinity,
+          radius: 4,
+        ),
+        const SizedBox(height: 8),
+        const Skeleton(
+          height: 16,
+          width: double.infinity,
+          radius: 4,
+        ),
+        const SizedBox(height: 8),
+        Skeleton(
+          height: 16,
+          width: MediaQuery.of(context).size.width * 0.7,
+          radius: 4,
+        ),
+      ],
     );
   }
 }

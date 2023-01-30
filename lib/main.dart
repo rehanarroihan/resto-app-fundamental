@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:restaurant/bloc/restaurant_cubit.dart';
 import 'package:restaurant/screen/home_screen.dart';
 
 void main() {
@@ -11,13 +13,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Restaurant',
-      theme: ThemeData(
-        primarySwatch: Colors.orange,
-        textTheme: GoogleFonts.poppinsTextTheme()
+    RestaurantCubit restaurantCubit = RestaurantCubit();
+
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<RestaurantCubit>(create: (context) => restaurantCubit),
+      ],
+      child: MaterialApp(
+        title: 'Restaurant',
+        theme: ThemeData(
+          primarySwatch: Colors.orange,
+          textTheme: GoogleFonts.poppinsTextTheme()
+        ),
+        home: const HomeScreen(),
       ),
-      home: const HomeScreen(),
     );
   }
 }
