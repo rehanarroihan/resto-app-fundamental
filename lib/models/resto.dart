@@ -5,6 +5,7 @@ class Resto {
   String? pictureId;
   String? city;
   double? rating;
+  bool? isFavorite;
 
   Resto({
     this.id,
@@ -12,7 +13,8 @@ class Resto {
     this.description,
     this.pictureId,
     this.city,
-    this.rating
+    this.rating,
+    this.isFavorite = false
   });
 
   Resto.fromJson(Map<String, dynamic> json) {
@@ -22,6 +24,7 @@ class Resto {
     pictureId = json['pictureId'];
     city = json['city'];
     rating = json['rating'].toDouble();
+    isFavorite = json['isFavorite'] == 1 ? true : false;
   }
 
   Map<String, dynamic> toJson() {
@@ -32,6 +35,7 @@ class Resto {
     data['pictureId'] = pictureId;
     data['city'] = city;
     data['rating'] = rating;
+    data['isFavorite'] = isFavorite == true ? 1 : 0;
     return data;
   }
 }

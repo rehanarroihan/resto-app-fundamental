@@ -4,8 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:restaurant/bloc/restaurant_cubit.dart';
 import 'package:restaurant/screen/details_screen.dart';
-import 'package:restaurant/widgets/negative_view_state.dart';
+import 'package:restaurant/screen/favorites_screen.dart';
 import 'package:restaurant/widgets/item_restaurant.dart';
+import 'package:restaurant/widgets/negative_view_state.dart';
+import 'package:restaurant/widgets/toast.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -32,7 +34,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return BlocListener(
       bloc: _restaurantCubit,
-      listener: (context, state) {},
+      listener: (context, state) {
+        if (state is ToggleFavoriteSuccess) {
+          showFlutterToast("Berhasil");
+        } else if (state is ToggleFavoriteFailed) {
+          showFlutterToast("Gagal");
+        }
+      },
       child: BlocBuilder(
         bloc: _restaurantCubit,
         builder: (context, state) {
@@ -55,13 +63,24 @@ class _HomeScreenState extends State<HomeScreen> {
                             style: GoogleFonts.pacifico(fontSize: 24, fontWeight: FontWeight.w700),
                           ),
                         ),
-                        IconButton(
-                          onPressed: () {
-                            if (!_restaurantCubit.isGetRestoListLoading) {
-                              _restaurantCubit.getRestoList();
-                            }
-                          },
-                          icon: const Icon(Icons.refresh),
+
+                        Row(
+                          children: [
+                            IconButton(
+                              onPressed: () => Navigator.push(context, MaterialPageRoute(
+                                builder: (context) => const FavoritesScreen()
+                              )),
+                              icon: const Icon(Icons.favorite),
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                if (!_restaurantCubit.isGetRestoListLoading) {
+                                  _restaurantCubit.getRestoList();
+                                }
+                              },
+                              icon: const Icon(Icons.refresh),
+                            ),
+                          ],
                         )
                       ],
                     ),
@@ -171,6 +190,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   name: _restaurantCubit.restaurants[index].name!,
                   type: _restaurantCubit.restaurants[index].city!,
                   rating: _restaurantCubit.restaurants[index].rating!,
+                  isFavorite: _restaurantCubit.restaurants[index].isFavorite!,
+                  onFavoriteToggleClick: () {
+                    _restaurantCubit.toggleFavorite(_restaurantCubit.restaurants[index]);
+                  },
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(
                       builder: (context) => DetailsScreen(

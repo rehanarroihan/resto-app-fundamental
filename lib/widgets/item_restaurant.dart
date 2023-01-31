@@ -8,7 +8,9 @@ class ItemRestaurant extends StatelessWidget {
   final String name;
   final String type;
   final double rating;
+  final bool isFavorite;
   final Function onTap;
+  final Function onFavoriteToggleClick;
 
   const ItemRestaurant({
     Key? key,
@@ -17,7 +19,9 @@ class ItemRestaurant extends StatelessWidget {
     required this.name,
     required this.type,
     required this.rating,
+    required this.isFavorite,
     required this.onTap,
+    required this.onFavoriteToggleClick,
   }) : super(key: key);
 
   @override
@@ -56,49 +60,83 @@ class ItemRestaurant extends StatelessWidget {
               ),
             ),
 
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700
-                    ),
-                  ),
-                  Text(
-                    type,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  Row(
+            Row(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      RatingBar.builder(
-                        itemSize: 20,
-                        ignoreGestures: true,
-                        initialRating: rating,
-                        direction: Axis.horizontal,
-                        itemBuilder: (context, _) => const Icon(
-                          Icons.star,
-                          color: Colors.amber,
+                      Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700
                         ),
-                        onRatingUpdate: (double value) {  },
                       ),
-                      const SizedBox(width: 4),
-                      Text('($rating)'),
+                      Text(
+                        type,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w500
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      Row(
+                        children: [
+                          RatingBar.builder(
+                            itemSize: 20,
+                            ignoreGestures: true,
+                            initialRating: rating,
+                            direction: Axis.horizontal,
+                            itemBuilder: (context, _) => const Icon(
+                              Icons.star,
+                              color: Colors.amber,
+                            ),
+                            onRatingUpdate: (double value) {  },
+                          ),
+                          const SizedBox(width: 4),
+                          Text('($rating)'),
+                        ],
+                      )
                     ],
-                  )
-                ],
-              ),
+                  ),
+                ),
+
+                Material(
+                  color: Colors.white,
+                  borderRadius: const BorderRadius.only(
+                    bottomRight: Radius.circular(8),
+                    topLeft: Radius.circular(8),
+                  ),
+                  child: InkWell(
+                    splashColor: Theme.of(context).primaryColorLight,
+                    borderRadius: const BorderRadius.only(
+                      bottomRight: Radius.circular(8),
+                      topLeft: Radius.circular(8),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.only(
+                          bottomRight: Radius.circular(8)
+                        )
+                      ),
+                      child: Icon(
+                        isFavorite ? Icons.favorite : Icons.favorite_border_outlined
+                      ),
+                    ),
+                    onTap: () => onFavoriteToggleClick(),
+                  ),
+                )
+              ],
             )
           ],
         ),
