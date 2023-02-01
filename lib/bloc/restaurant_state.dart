@@ -25,6 +25,10 @@ class ToggleFavoriteInit extends RestaurantState {}
 
 class ToggleFavoriteFailed extends RestaurantState {}
 
-class ToggleFavoriteSuccess extends RestaurantState {}
+class ToggleFavoriteSuccess extends RestaurantState {
+  final Resto? resto;
+
+  const ToggleFavoriteSuccess({this.resto});
+}
 
 

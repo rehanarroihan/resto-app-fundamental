@@ -1,32 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:restaurant/bloc/restaurant_cubit.dart';
-import 'package:restaurant/screen/home_screen.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+import 'app.dart';
+import 'main_app.dart';
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-  @override
-  Widget build(BuildContext context) {
-    RestaurantCubit restaurantCubit = RestaurantCubit();
+  App.configure(
+    apiBaseURL: 'https://restaurant-api.dicoding.dev/',
+  );
 
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<RestaurantCubit>(create: (context) => restaurantCubit),
-      ],
-      child: MaterialApp(
-        title: 'Restaurant',
-        theme: ThemeData(
-          primarySwatch: Colors.orange,
-          textTheme: GoogleFonts.poppinsTextTheme()
-        ),
-        home: const HomeScreen(),
-      ),
-    );
-  }
+  await App().init();
+
+  runApp(const MainApp());
 }

@@ -19,6 +19,7 @@ dependencies:
   lottie: ^2.2.0
   sqflite: ^2.2.4+1
   fluttertoast: ^8.1.2
+  shared_preferences: ^2.0.17
 
 dev_dependencies:
   flutter_test:

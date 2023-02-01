@@ -5,6 +5,7 @@ import 'package:lottie/lottie.dart';
 import 'package:restaurant/bloc/restaurant_cubit.dart';
 import 'package:restaurant/screen/details_screen.dart';
 import 'package:restaurant/screen/favorites_screen.dart';
+import 'package:restaurant/screen/setting_screen.dart';
 import 'package:restaurant/widgets/item_restaurant.dart';
 import 'package:restaurant/widgets/negative_view_state.dart';
 import 'package:restaurant/widgets/toast.dart';
@@ -36,7 +37,11 @@ class _HomeScreenState extends State<HomeScreen> {
       bloc: _restaurantCubit,
       listener: (context, state) {
         if (state is ToggleFavoriteSuccess) {
-          showFlutterToast("Berhasil");
+          if (state.resto?.isFavorite == true) {
+            showFlutterToast("Berhasil menambahkan ke favorite");
+          } else {
+            showFlutterToast("Berhasil menhapus favorite");
+          }
         } else if (state is ToggleFavoriteFailed) {
           showFlutterToast("Gagal");
         }
@@ -73,12 +78,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               icon: const Icon(Icons.favorite),
                             ),
                             IconButton(
-                              onPressed: () {
-                                if (!_restaurantCubit.isGetRestoListLoading) {
-                                  _restaurantCubit.getRestoList();
-                                }
-                              },
-                              icon: const Icon(Icons.refresh),
+                              onPressed: () => Navigator.push(context, MaterialPageRoute(
+                                builder: (context) => const SettingScreen()
+                              )),
+                              icon: const Icon(Icons.settings),
                             ),
                           ],
                         )

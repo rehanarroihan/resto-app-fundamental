@@ -63,7 +63,10 @@ class RestaurantCubit extends Cubit<RestaurantState> {
     RestaurantDetailResponse response = await _restaurantService.getDetail(id);
 
     if (response.error != true) {
+      List<Resto> favoriteList = await DatabaseHelper().getFavoriteResto();
+
       restoDetail = response.restaurant;
+      restoDetail?.isFavorite = favoriteList.where((el) => el.id == response.restaurant?.id).isNotEmpty;
     } else {
       if (response.message!.contains("No internet")) {
         isGetRestoDetailErrorNoInternet = true;
@@ -99,18 +102,23 @@ class RestaurantCubit extends Cubit<RestaurantState> {
       if (resto.isFavorite == false) {
         resto.isFavorite = true;
         await DatabaseHelper().insertFavoriteResto(resto);
-
-        restaurants.firstWhere((rest) => rest.id == resto.id).isFavorite = true;
       } else {
         resto.isFavorite = false;
         await DatabaseHelper().deleteFavoriteResto(resto.id.toString());
-
-        restaurants.firstWhere((rest) => rest.id == resto.id).isFavorite = false;
       }
+
+      // Changing isFavorite status to the home item list and maybe it's detail, and maybe also the favorite list
+      restaurants.firstWhere((item) => item.id == resto.id).isFavorite = resto.isFavorite;
+      if (restoDetail?.id == resto.id) {
+        restoDetail?.isFavorite = resto.isFavorite;
+      }
+      if (favoriteList.where((item) => item.id == resto.id).isNotEmpty) {
+        favoriteList.firstWhere((item) => item.id == resto.id).isFavorite = resto.isFavorite;
+      }
+
+      emit(ToggleFavoriteSuccess(resto: resto));
     } catch (_) {
       emit(ToggleFavoriteFailed());
     }
-
-    emit(ToggleFavoriteSuccess());
   }
 }

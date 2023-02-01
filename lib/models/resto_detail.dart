@@ -12,6 +12,7 @@ class RestoDetail {
   Menu? menus;
   double? rating;
   List<CustomerReview>? customerReviews;
+  bool? isFavorite;
 
   RestoDetail({
     this.id,
@@ -23,7 +24,8 @@ class RestoDetail {
     this.categories,
     this.menus,
     this.rating,
-    this.customerReviews
+    this.customerReviews,
+    this.isFavorite
   });
 
   RestoDetail.fromJson(Map<String, dynamic> json) {
@@ -41,6 +43,7 @@ class RestoDetail {
     }
     menus = json['menus'] != null ? Menu.fromJson(json['menus']) : null;
     rating = json['rating'].toDouble();
+    isFavorite = json['isFavorite'];
     if (json['customerReviews'] != null) {
       customerReviews = <CustomerReview>[];
       json['customerReviews'].forEach((v) {
@@ -64,6 +67,7 @@ class RestoDetail {
       data['menus'] = menus!.toJson();
     }
     data['rating'] = rating;
+    data['isFavorite'] = isFavorite;
     if (customerReviews != null) {
       data['customerReviews'] = customerReviews!.map((v) => v.toJson()).toList();
     }

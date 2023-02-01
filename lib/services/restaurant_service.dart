@@ -1,13 +1,14 @@
 import 'package:dio/dio.dart';
+import 'package:restaurant/app.dart';
 import 'package:restaurant/models/network_response/restaurant_detail_response.dart';
 import 'package:restaurant/models/network_response/restaurant_response.dart';
 
 class RestaurantService {
-  String baseUrl = "https://restaurant-api.dicoding.dev/";
+  final Dio _dio = App().dio;
 
   Future<RestaurantResponse> getRestoList() async {
     try {
-      Response response = await Dio().get("${baseUrl}list");
+      Response response = await _dio.get("list");
 
       if (response.statusCode == 200) {
         return RestaurantResponse.fromJson(response.data);
@@ -47,7 +48,7 @@ class RestaurantService {
 
   Future<RestaurantResponse> searchResto(String query) async {
     try {
-      Response response = await Dio().get("${baseUrl}search?q=$query");
+      Response response = await _dio.get("search?q=$query");
 
       if (response.statusCode == 200) {
         return RestaurantResponse.fromJson(response.data);
@@ -87,7 +88,7 @@ class RestaurantService {
 
   Future<RestaurantDetailResponse> getDetail(String id) async {
     try {
-      Response response = await Dio().get("${baseUrl}detail/$id");
+      Response response = await _dio.get("detail/$id");
 
       if (response.statusCode == 200) {
         return RestaurantDetailResponse.fromJson(response.data);

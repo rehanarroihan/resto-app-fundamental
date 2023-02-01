@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:restaurant/bloc/restaurant_cubit.dart';
+import 'package:restaurant/models/resto.dart';
 import 'package:restaurant/widgets/item_customer_review.dart';
 import 'package:restaurant/widgets/item_resto_menu.dart';
 import 'package:restaurant/widgets/negative_view_state.dart';
@@ -101,48 +102,97 @@ class _DetailsScreenState extends State<DetailsScreen> {
           ),
         ),
 
-        Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.restoName,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700
-                ),
-              ),
-              Text(
-                widget.city,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w500
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              Row(
+        Row(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  RatingBar.builder(
-                    itemSize: 20,
-                    ignoreGestures: true,
-                    initialRating: widget.rating,
-                    direction: Axis.horizontal,
-                    itemBuilder: (context, _) => const Icon(
-                      Icons.star,
-                      color: Colors.amber,
+                  Text(
+                    widget.restoName,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700
                     ),
-                    onRatingUpdate: (double value) {  },
                   ),
-                  const SizedBox(width: 4),
-                  Text('(${widget.rating})'),
+                  Text(
+                    widget.city,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Row(
+                    children: [
+                      RatingBar.builder(
+                        itemSize: 20,
+                        ignoreGestures: true,
+                        initialRating: widget.rating,
+                        direction: Axis.horizontal,
+                        itemBuilder: (context, _) => const Icon(
+                          Icons.star,
+                          color: Colors.amber,
+                        ),
+                        onRatingUpdate: (double value) {  },
+                      ),
+                      const SizedBox(width: 4),
+                      Text('(${widget.rating})'),
+                    ],
+                  ),
                 ],
               ),
-            ],
-          ),
+            ),
+
+            _restaurantCubit.isGetRestoDetailLoading ? const SizedBox() : Container(
+              margin: const EdgeInsets.only(right: 8),
+              child: Material(
+                borderRadius: const BorderRadius.only(
+                  bottomRight: Radius.circular(8),
+                  topLeft: Radius.circular(8),
+                ),
+                child: InkWell(
+                  splashColor: Theme.of(context).primaryColorLight,
+                  borderRadius: const BorderRadius.only(
+                    bottomRight: Radius.circular(8),
+                    topLeft: Radius.circular(8),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                        bottomRight: Radius.circular(8)
+                      )
+                    ),
+                    child: Icon(
+                      _restaurantCubit.restoDetail?.isFavorite == true
+                          ? Icons.favorite
+                          : Icons.favorite_border_outlined
+                    ),
+                  ),
+                  onTap: () {
+                    if (!_restaurantCubit.isGetRestoDetailLoading) {
+                      _restaurantCubit.toggleFavorite(Resto(
+                        id: _restaurantCubit.restoDetail?.id,
+                        name: _restaurantCubit.restoDetail?.name,
+                        description: _restaurantCubit.restoDetail?.description,
+                        city: _restaurantCubit.restoDetail?.city,
+                        pictureId: _restaurantCubit.restoDetail?.pictureId,
+                        rating: _restaurantCubit.restoDetail?.rating,
+                        isFavorite: _restaurantCubit.restoDetail?.isFavorite,
+                      ));
+                    }
+                  },
+                ),
+              ),
+            )
+          ],
         ),
       ],
     );

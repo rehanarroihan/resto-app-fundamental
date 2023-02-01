@@ -5,7 +5,6 @@ import 'package:restaurant/bloc/restaurant_cubit.dart';
 import 'package:restaurant/screen/details_screen.dart';
 import 'package:restaurant/widgets/item_restaurant.dart';
 import 'package:restaurant/widgets/negative_view_state.dart';
-import 'package:restaurant/widgets/toast.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({Key? key}) : super(key: key);
@@ -28,34 +27,24 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener(
+    return BlocBuilder(
       bloc: _restaurantCubit,
-      listener: (context, state) {
-        if (state is ToggleFavoriteSuccess) {
-          showFlutterToast("Berhasil");
-        } else if (state is ToggleFavoriteFailed) {
-          showFlutterToast("Gagal");
-        }
-      },
-      child: BlocBuilder(
-        bloc: _restaurantCubit,
-        builder: (context, state) {
-          return Scaffold(
-            appBar: AppBar(
-              elevation: 0,
-              centerTitle: true,
-              backgroundColor: const Color(0xFFf9f9fb),
-              title: const Text(
-                'Favorites',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600
-                ),
+      builder: (context, state) {
+        return Scaffold(
+          appBar: AppBar(
+            elevation: 0,
+            centerTitle: true,
+            backgroundColor: const Color(0xFFf9f9fb),
+            title: const Text(
+              'Favorites',
+              style: TextStyle(
+                fontWeight: FontWeight.w600
               ),
             ),
-            body: _buildList(),
-          );
-        }
-      ),
+          ),
+          body: _buildList(),
+        );
+      }
     );
   }
 
