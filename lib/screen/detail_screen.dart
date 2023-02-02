@@ -9,27 +9,37 @@ import 'package:restaurant/widgets/item_resto_menu.dart';
 import 'package:restaurant/widgets/negative_view_state.dart';
 import 'package:restaurant/widgets/skeleton.dart';
 
-class DetailsScreen extends StatefulWidget {
+class DetailScreenArgs {
   final String id;
   final String imageId;
   final String restoName;
   final String city;
   final double rating;
 
-  const DetailsScreen({
-    Key? key,
+  DetailScreenArgs({
     required this.id,
     required this.imageId,
     required this.restoName,
     required this.city,
-    required this.rating,
+    required this.rating
+  });
+}
+
+class DetailScreen extends StatefulWidget {
+  static const routeName = '/detail';
+
+  final DetailScreenArgs args;
+
+  const DetailScreen({
+    Key? key,
+    required this.args
   }) : super(key: key);
 
   @override
-  State<DetailsScreen> createState() => _DetailsScreenState();
+  State<DetailScreen> createState() => _DetailScreenState();
 }
 
-class _DetailsScreenState extends State<DetailsScreen> {
+class _DetailScreenState extends State<DetailScreen> {
   late RestaurantCubit _restaurantCubit;
 
   @override
@@ -38,7 +48,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
     _restaurantCubit = BlocProvider.of<RestaurantCubit>(context);
 
-    _restaurantCubit.getRestoDetail(widget.id);
+    _restaurantCubit.getRestoDetail(widget.args.id);
   }
 
   @override
@@ -57,7 +67,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   title: 'No Internet',
                   description: 'Tidak ada koneksi internet,\nPastikan anda terhubung ke internet',
                   actionButtonText: 'Coba Lagi',
-                  onActionButtonTap: () => _restaurantCubit.getRestoDetail(widget.id),
+                  onActionButtonTap: () => _restaurantCubit.getRestoDetail(widget.args.id),
                 ),
               ),
             ],
@@ -86,7 +96,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         CachedNetworkImage(
-          imageUrl: "https://restaurant-api.dicoding.dev/images/large/${widget.imageId}",
+          imageUrl: "https://restaurant-api.dicoding.dev/images/large/${widget.args.imageId}",
           height: 320,
           placeholder: (context, url) => const Skeleton(
             height: 320,
@@ -112,14 +122,14 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.restoName,
+                    widget.args.restoName,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700
                     ),
                   ),
                   Text(
-                    widget.city,
+                    widget.args.city,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -134,7 +144,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                       RatingBar.builder(
                         itemSize: 20,
                         ignoreGestures: true,
-                        initialRating: widget.rating,
+                        initialRating: widget.args.rating,
                         direction: Axis.horizontal,
                         itemBuilder: (context, _) => const Icon(
                           Icons.star,
@@ -143,7 +153,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         onRatingUpdate: (double value) {  },
                       ),
                       const SizedBox(width: 4),
-                      Text('(${widget.rating})'),
+                      Text('(${widget.args.rating})'),
                     ],
                   ),
                 ],

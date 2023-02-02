@@ -3,14 +3,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:restaurant/bloc/restaurant_cubit.dart';
-import 'package:restaurant/screen/details_screen.dart';
+import 'package:restaurant/screen/detail_screen.dart';
 import 'package:restaurant/screen/favorites_screen.dart';
 import 'package:restaurant/screen/setting_screen.dart';
+import 'package:restaurant/utils/notification_helper.dart';
 import 'package:restaurant/widgets/item_restaurant.dart';
 import 'package:restaurant/widgets/negative_view_state.dart';
 import 'package:restaurant/widgets/toast.dart';
 
 class HomeScreen extends StatefulWidget {
+  static const routeName = '/home';
+
   const HomeScreen({Key? key}) : super(key: key);
 
   @override
@@ -20,13 +23,24 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late RestaurantCubit _restaurantCubit;
 
+  final NotificationHelper _notificationHelper = NotificationHelper();
+
   @override
   void initState() {
-    super.initState();
-
     _restaurantCubit = BlocProvider.of<RestaurantCubit>(context);
 
     _restaurantCubit.getRestoList();
+
+    _notificationHelper.configureSelectNotificationSubject(DetailScreen.routeName);
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    selectNotificationSubject.close();
+
+    super.dispose();
   }
 
   final TextEditingController _inputSearch = TextEditingController();
@@ -199,13 +213,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(
-                      builder: (context) => DetailsScreen(
+                      builder: (context) => DetailScreen(args: DetailScreenArgs(
                         id: _restaurantCubit.restaurants[index].id!,
                         imageId: imageId,
                         restoName: _restaurantCubit.restaurants[index].name!,
                         city: _restaurantCubit.restaurants[index].city!,
                         rating: _restaurantCubit.restaurants[index].rating!,
-                      )
+                      ))
                     ));
                   },
                 ),

@@ -1,5 +1,12 @@
+import 'dart:io';
+
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:restaurant/app.dart';
+import 'package:restaurant/common/navigation.dart';
+import 'package:restaurant/utils/background_service.dart';
+import 'package:restaurant/utils/date_time_helper.dart';
 
 class SettingScreen extends StatefulWidget {
   const SettingScreen({Key? key}) : super(key: key);
@@ -51,9 +58,15 @@ class _SettingScreenState extends State<SettingScreen> {
               padding: const EdgeInsets.all(16),
               child: _settingItem(
                 title: 'Notifikasi',
-                description: 'Dapatkan notifikasi setiap pukul 13.00',
+                description: 'Dapatkan notifikasi setiap pukul 11.00',
                 enabled: notifSettingOn,
-                onToggle: (bool value) => _toggleNotifSetting(value),
+                onToggle: (bool value) {
+                  if (Platform.isIOS) {
+                    customDialog();
+                  } else {
+                    _toggleNotifSetting(value);
+                  }
+                },
               ),
             )
           ],
@@ -62,7 +75,20 @@ class _SettingScreenState extends State<SettingScreen> {
     );
   }
 
-  void _toggleNotifSetting(bool value) {
+  void _toggleNotifSetting(bool value) async {
+    if (value) {
+      await AndroidAlarmManager.periodic(
+        const Duration(hours: 24),
+        99,
+        BackgroundService.callback,
+        startAt: DateTimeHelper.format(),
+        exact: true,
+        wakeup: true,
+      );
+    } else {
+      await AndroidAlarmManager.cancel(99);
+    }
+
     App().prefs.setBool(prefsKeyIsNotificationOn, value);
     setState(() {
       notifSettingOn = value;
@@ -114,6 +140,27 @@ class _SettingScreenState extends State<SettingScreen> {
           )
         ],
       ),
+    );
+  }
+
+  void customDialog() {
+    showCupertinoDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return CupertinoAlertDialog(
+          title: const Text('Coming Soon!'),
+          content: const Text('This feature will be coming soon!'),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('Ok'),
+              onPressed: () {
+                Navigation.back();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

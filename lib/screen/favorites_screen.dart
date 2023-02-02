@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
 import 'package:restaurant/bloc/restaurant_cubit.dart';
-import 'package:restaurant/screen/details_screen.dart';
+import 'package:restaurant/screen/detail_screen.dart';
 import 'package:restaurant/widgets/item_restaurant.dart';
 import 'package:restaurant/widgets/negative_view_state.dart';
 
@@ -94,13 +94,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 },
                 onTap: () {
                   Navigator.push(context, MaterialPageRoute(
-                    builder: (context) => DetailsScreen(
+                    builder: (context) => DetailScreen(args: DetailScreenArgs(
                       id: _restaurantCubit.favoriteList[index].id!,
                       imageId: imageId,
                       restoName: _restaurantCubit.favoriteList[index].name!,
                       city: _restaurantCubit.favoriteList[index].city!,
-                      rating: _restaurantCubit.favoriteList[index].rating!,
-                    )
+                      rating: _restaurantCubit.favoriteList[index].rating!
+                    ))
                   ));
                 },
               ),

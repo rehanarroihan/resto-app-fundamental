@@ -20,6 +20,10 @@ dependencies:
   sqflite: ^2.2.4+1
   fluttertoast: ^8.1.2
   shared_preferences: ^2.0.17
+  intl: ^0.18.0
+  android_alarm_manager_plus: ^2.1.0
+  flutter_local_notifications: ^13.0.0
+  rxdart: ^0.27.7
 
 dev_dependencies:
   flutter_test:

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:restaurant/bloc/restaurant_cubit.dart';
+import 'package:restaurant/common/navigation.dart';
+import 'package:restaurant/screen/detail_screen.dart';
 import 'package:restaurant/screen/home_screen.dart';
 
 class MainApp extends StatelessWidget {
@@ -17,11 +19,18 @@ class MainApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'Restaurant',
+        navigatorKey: navigatorKey,
         theme: ThemeData(
           primarySwatch: Colors.orange,
           textTheme: GoogleFonts.poppinsTextTheme()
         ),
-        home: const HomeScreen(),
+        initialRoute: HomeScreen.routeName,
+        routes: {
+          HomeScreen.routeName: (context) => const HomeScreen(),
+          DetailScreen.routeName: (context) => DetailScreen(
+            args: ModalRoute.of(context)?.settings.arguments as DetailScreenArgs,
+          ),
+        },
       ),
     );
   }

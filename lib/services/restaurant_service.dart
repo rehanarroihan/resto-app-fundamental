@@ -1,24 +1,23 @@
 import 'package:dio/dio.dart';
-import 'package:restaurant/app.dart';
 import 'package:restaurant/models/network_response/restaurant_detail_response.dart';
 import 'package:restaurant/models/network_response/restaurant_response.dart';
 
 class RestaurantService {
-  final Dio _dio = App().dio;
+  String baseUrl = "https://restaurant-api.dicoding.dev/";
 
   Future<RestaurantResponse> getRestoList() async {
     try {
-      Response response = await _dio.get("list");
+      Response response = await Dio().get("${baseUrl}list");
 
       if (response.statusCode == 200) {
         return RestaurantResponse.fromJson(response.data);
       }
 
       return RestaurantResponse(
-        error: true,
-        message: "Something went wrong",
-        count: 0,
-        restaurants: []
+          error: true,
+          message: "Something went wrong",
+          count: 0,
+          restaurants: []
       );
     } on DioError catch (e, _) {
       if (e.message.contains("Failed host lookup")) {
@@ -48,7 +47,7 @@ class RestaurantService {
 
   Future<RestaurantResponse> searchResto(String query) async {
     try {
-      Response response = await _dio.get("search?q=$query");
+      Response response = await Dio().get("${baseUrl}search?q=$query");
 
       if (response.statusCode == 200) {
         return RestaurantResponse.fromJson(response.data);
@@ -88,7 +87,7 @@ class RestaurantService {
 
   Future<RestaurantDetailResponse> getDetail(String id) async {
     try {
-      Response response = await _dio.get("detail/$id");
+      Response response = await Dio().get("${baseUrl}detail/$id");
 
       if (response.statusCode == 200) {
         return RestaurantDetailResponse.fromJson(response.data);
